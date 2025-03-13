@@ -1,0 +1,67 @@
+ {% extends 'base.html' %}
+ {% load static %}
+ {% block body %}
+<div class="max-w-lg mx-auto bg-white p-6 shadow-md rounded-lg mt-10">
+  <h2 class="text-2xl font-bold mb-4">Profile</h2>
+
+  <!-- Profile Image -->
+  <div class="flex items-center space-x-4 mb-4">
+    <img
+      src="{% if profile.profile_pic %}{{ profile.profile_pic.url }}{% else %}{% static 'images/default-profile.jpg' %}{% endif %}"
+      alt="Profile Picture"
+      class="w-16 h-16 rounded-full border-2 border-gray-400"
+    />
+
+    <div>
+      <p class="text-lg font-semibold">{{ user.username }}</p>
+      <p class="text-sm text-gray-600">{{ user.email }}</p>
+      <p class="text-sm text-gray-500 mt-1">
+        {% if profile.bio %} {{ profile.bio }} {% else %} No bio added {%endif%}
+      </p>
+    </div>
+  </div>
+
+  <!-- Edit Profile Form -->
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Profile Picture -->
+    <div class="mb-4">
+      <label class="block text-gray-700 font-medium"
+        >Change Profile Picture:</label
+      >
+      <input
+        type="file"
+        name="profile_pic"
+        class="mt-1 block w-full border rounded-lg p-2"
+      />
+    </div>
+
+    <!-- Bio Field -->
+    <div class="mb-4">
+      <label class="block text-gray-700 font-medium">Bio:</label>
+      <textarea
+        name="bio"
+        class="mt-1 block w-full border rounded-lg p-2"
+        rows="3"
+      >
+{{ profile.bio|default:'' }}</textarea
+      >
+    </div>
+
+    <button
+      type="submit"
+      class="bg-blue-500 text-white px-4 py-2 rounded-lg w-full"
+    >
+      Save Changes
+    </button>
+  </form>
+
+  <!-- Logout Button -->
+  <a
+    href="{% url 'logout' %}"
+    class="block mt-4 text-center bg-red-500 text-white px-4 py-2 rounded-lg"
+    >Logout</a
+  >
+</div>
+{% endblock %}

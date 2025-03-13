@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container mx-auto px-4">
+<div class="flex justify-center items-center py-12"> 
+    <div class="w-full max-w-xl mx-4 sm:mx-auto p-7 bg-white rounded-lg shadow-md border border-gray-200">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-5">Task Details</h1>
+
+        <div class="space-y-4">
+            <div class="border-b pb-3">
+                <p class="text-lg font-semibold text-gray-700">📌 Title:</p>
+                <p class="text-gray-800">{{ task.title }}</p>
+            </div>
+
+            <div class="border-b pb-3">
+                <p class="text-lg font-semibold text-gray-700">📝 Description:</p>
+                <p class="text-gray-700">{{ task.description }}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <p class="text-lg font-semibold text-gray-700">📅 Created At:</p>
+                    <p class="text-gray-600">{{ task.created_at|date:"Y-m-d H:i:s" }}</p>
+                </div>
+                <div>
+                    <p class="text-lg font-semibold text-gray-700">⏳ Due Date:</p>
+                    <p class="text-gray-600">{{ task.due_date|date:"Y-m-d H:i:s" }}</p>
+                </div>
+            </div>
+
+            <div class="border-t pt-3">
+                <p class="text-lg font-semibold text-gray-700">✅ Completed:</p>
+                <span class="inline-block px-3 py-1 rounded-full text-white text-sm font-medium 
+                    {% if task.is_completed %} bg-green-500 {% else %} bg-red-500 {% endif %}">
+                    {{ task.is_completed|yesno:"Yes,No" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="flex justify-center space-x-4 mt-5">
+            <a href="{% url 'task_update' task.id %}" 
+                class="bg-blue-500 text-white px-5 py-2 rounded-md shadow-md hover:bg-blue-600 transition">
+                ✏️ Edit
+            </a>
+            <a href="{% url 'task_list' %}" 
+                class="bg-gray-500 text-white px-5 py-2 rounded-md shadow-md hover:bg-gray-600 transition">
+                🔙 Back
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock body %}

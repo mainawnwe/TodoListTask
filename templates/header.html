@@ -1,0 +1,94 @@
+{% load static %}
+<nav class="bg-gray-800 shadow-md">
+  <div class="max-w-full mx-auto px-4 py-4">
+    <div class="flex items-center justify-between">
+      <!-- Logo and Title -->
+      <div class="flex items-center space-x-2">
+        <img
+          src="{% static 'images/app-logo.jpg' %}"
+          alt="App Logo"
+          class="w-12 h-12 rounded-full"
+        />
+        <a class="text-white text-2xl font-bold" href="#">ToDo List</a>
+      </div>
+      
+      <!-- Search Bar (Always Visible) -->
+      <form class="flex items-center space-x-2">
+        <input
+          class="px-4 py-2 rounded-lg focus:outline-none"
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+        />
+        <button
+          class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+          type="submit"
+        >
+          Search
+        </button>
+      </form>
+
+      <!-- Hamburger Button (Tablet & Mobile) -->
+      <div class="lg:hidden flex items-center">
+        <button id="hamburger" class="text-white focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Full Navbar for PC -->
+      <div class="hidden lg:flex items-center space-x-4">
+        <ul class="flex items-center space-x-4">
+          <li><a class="text-white hover:bg-gray-700 px-6 py-4 rounded" href="{% url 'home' %}">Home</a></li>
+          <li><a class="text-white hover:bg-gray-700 px-6 py-4 rounded" href="{% url 'task_list' %}">Task List</a></li> <!-- Changed to Task List -->
+        </ul>
+        <div class="flex items-center space-x-4 ml-4">
+          {% if user.is_authenticated %}
+          <span class="text-white text-2xl font-bold">{{ user.username }}</span>
+          <a href="{% url 'profile' %}">
+            <img src="{% if profile.profile_pic %}{{ profile.profile_pic.url }}{% else %}{% static 'images/default-profile.jpg' %}{% endif %}" class="w-10 h-10 rounded-full border-2 border-white" />
+          </a>
+          <a class="text-white hover:bg-gray-700 px-6 py-4 rounded" href="{% url 'logout' %}">Logout</a>
+          {% else %}
+          <a class="text-white hover:bg-gray-700 px-6 py-4 rounded" href="{% url 'login' %}">Login</a>
+          <a class="text-white hover:bg-gray-700 px-6 py-4 rounded" href="{% url 'register' %}">Sign Up</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tablet & Mobile Menu -->
+  <div id="mobile-menu" class="hidden bg-gray-900 w-full px-4 py-4">
+    <div class="flex flex-col items-center mt-4">
+      <a class="text-white hover:bg-gray-700 px-4 py-3 rounded-lg w-full text-center" href="{% url 'home' %}">Home</a>
+      <a class="text-white hover:bg-gray-700 px-4 py-3 rounded-lg w-full text-center" href="{% url 'task_list' %}">Task List</a> <!-- Changed to Task List -->
+      
+      {% if user.is_authenticated %}
+      <span class="text-white text-lg font-bold mt-4">{{ user.username }}</span>
+      <a href="{% url 'profile' %}">
+        <img src="{% if profile.profile_pic %}{{ profile.profile_pic.url }}{% else %}{% static 'images/default-profile.jpg' %}{% endif %}" class="w-10 h-10 rounded-full border-2 border-white mt-4" />
+      </a>
+      <a class="text-white hover:bg-gray-700 px-4 py-3 rounded-lg w-full text-center mt-4" href="{% url 'logout' %}">Logout</a>
+      {% else %}
+      <a class="text-white hover:bg-gray-700 px-4 py-3 rounded-lg w-full text-center mt-4" href="{% url 'login' %}">Login</a>
+      <a class="text-white hover:bg-gray-700 px-4 py-3 rounded-lg w-full text-center mt-4" href="{% url 'register' %}">Sign Up</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Toggle mobile menu visibility
+  document.getElementById('hamburger').addEventListener('click', function() {
+    document.getElementById('mobile-menu').classList.toggle('hidden');
+  });
+
+  // Listen for window resize to reset the mobile menu visibility
+  window.addEventListener('resize', function() {
+    if (window.innerWidth >= 1024) {  // Check if the screen is large
+      document.getElementById('mobile-menu').classList.add('hidden');  // Hide the mobile menu
+    }
+  });
+</script>
