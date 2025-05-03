@@ -9,11 +9,29 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from myapp.utils import send_task_reminder_email
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
 def home(request):
     return render(request, "home.html")
+
+
+@login_required
+@require_POST
+def toggle_task_completion(request):
+    task_id = request.POST.get('task_id')
+    is_completed = request.POST.get('is_completed') == 'true'
+
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+        task.is_completed = is_completed
+        task.save()
+        return JsonResponse({'success': True, 'is_completed': task.is_completed})
+    except Task.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Task not found or unauthorized'}, status=404)
 
 
 def login_view(request):

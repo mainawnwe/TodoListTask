@@ -62,7 +62,13 @@
                 <td class="py-3 px-6">{{ task.description }}</td>
                 <td class="py-3 px-6">{{ task.created_at }}</td>
                 <td class="py-3 px-6">{{ task.due_date|date:'Y-m-d H:i:s' }}</td>
-                <td class="py-3 px-6">{{ task.is_completed|yesno:'Yes,No' }}</td>
+                <td class="py-3 px-6">
+                  {% if task.user == request.user %}
+                    <input type="checkbox" class="task-completed-checkbox" data-task-id="{{ task.id }}" {% if task.is_completed %}checked{% endif %}>
+                  {% else %}
+                    {{ task.is_completed|yesno:'Yes,No' }}
+                  {% endif %}
+                </td>
                 <td class="py-3 px-6">{{ task.user.username }}</td>
                 <td class="py-3 px-6">
                   <a href="{% url 'task_detail' task.id %}" class="text-blue-500 hover:underline"><i class="fa-solid fa-circle-info"></i></a>
@@ -97,4 +103,42 @@
     {% endif %}
   </div>
   <br><br>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.task-completed-checkbox');
+    checkboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const taskId = this.getAttribute('data-task-id');
+        const isCompleted = this.checked;
+
+        fetch("{% url 'toggle_task_completion' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: new URLSearchParams({
+            'task_id': taskId,
+            'is_completed': isCompleted
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            alert('Failed to update task completion status.');
+            // Revert checkbox state on failure
+            checkbox.checked = !isCompleted;
+          }
+        })
+        .catch(error => {
+          alert('Error updating task completion status.');
+          // Revert checkbox state on error
+          checkbox.checked = !isCompleted;
+        });
+      });
+    });
+  });
+</script>
+
 {% endblock %}
