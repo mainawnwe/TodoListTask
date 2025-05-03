@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "jazzmin",
     "myapp",
-<<<<<<< HEAD
     "django_celery_beat",
 ]
 
@@ -58,10 +57,7 @@ CELERY_TIMEZONE = 'UTC'
 # Add django-celery-beat scheduler
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
-=======
-]
 
->>>>>>> 2e5f3ce78f39aed0b4848893b4ae6d9b0a25f350
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -177,7 +173,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 from django.contrib.messages import constants as messages
 
-MESSAGAE_tAGs = {
+MESSAGE_TAGS = {
     messages.DEBUG: "alert-secondary",
     messages.INFO: "alert-info",
     messages.SUCCESS: "alert-success",
