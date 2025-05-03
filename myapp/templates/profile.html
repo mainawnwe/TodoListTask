@@ -1,67 +1,24 @@
- {% extends 'base.html' %}
- {% load static %}
- {% block body %}
-<div class="max-w-lg mx-auto bg-white p-6 shadow-md rounded-lg mt-10">
-  <h2 class="text-2xl font-bold mb-4">Profile</h2>
+{% extends 'base.html' %}
 
-  <!-- Profile Image -->
-  <div class="flex items-center space-x-4 mb-4">
-    <img
-      src="{% if profile.profile_pic %}{{ profile.profile_pic.url }}{% else %}{% static 'images/default-profile.jpg' %}{% endif %}"
-      alt="Profile Picture"
-      class="w-16 h-16 rounded-full border-2 border-gray-400"
-    />
+{% block body %}
+  {% load static %}
+  
+  <br />
+  <div class="container mx-auto px-4">
+    {% if user.is_authenticated %}
+      <h1 class="text-4xl font-semibold text-gray-800 dark:text-white mb-6">User Profile</h1>
 
-    <div>
-      <p class="text-lg font-semibold">{{ user.username }}</p>
-      <p class="text-sm text-gray-600">{{ user.email }}</p>
-      <p class="text-sm text-gray-500 mt-1">
-        {% if profile.bio %} {{ profile.bio }} {% else %} No bio added {%endif%}
-      </p>
-    </div>
+      <form method="post" enctype="multipart/form-data" class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 max-w-lg mx-auto">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600">Update Profile</button>
+      </form>
+    {% else %}
+      <div class="text-center">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800">Please log in to view your profile</h2>
+        <a href="{% url 'login' %}" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all">Log In</a>
+      </div>
+    {% endif %}
   </div>
-
-  <!-- Edit Profile Form -->
-  <form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <!-- Profile Picture -->
-    <div class="mb-4">
-      <label class="block text-gray-700 font-medium"
-        >Change Profile Picture:</label
-      >
-      <input
-        type="file"
-        name="profile_pic"
-        class="mt-1 block w-full border rounded-lg p-2"
-      />
-    </div>
-
-    <!-- Bio Field -->
-    <div class="mb-4">
-      <label class="block text-gray-700 font-medium">Bio:</label>
-      <textarea
-        name="bio"
-        class="mt-1 block w-full border rounded-lg p-2"
-        rows="3"
-      >
-{{ profile.bio|default:'' }}</textarea
-      >
-    </div>
-
-    <button
-      type="submit"
-      class="bg-blue-500 text-white px-4 py-2 rounded-lg w-full"
-    >
-      Save Changes
-    </button>
-  </form>
-
-  <!-- Logout Button -->
-  <a
-    href="{% url 'logout' %}"
-    class="block mt-4 text-center bg-red-500 text-white px-4 py-2 rounded-lg"
-    >Logout</a
-  >
-</div>
+  <br><br>
 {% endblock %}

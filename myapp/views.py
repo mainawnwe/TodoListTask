@@ -12,6 +12,9 @@ from myapp.utils import send_task_reminder_email
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from .forms import CommentForm
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import redirect
 
 
 # Create your views here.
@@ -19,8 +22,17 @@ def home(request):
     return render(request, "home.html")
 
 
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from .models import Task
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+import json
+
 @login_required
 @require_POST
+@csrf_exempt
 def toggle_task_completion(request):
     task_id = request.POST.get('task_id')
     is_completed = request.POST.get('is_completed') == 'true'
@@ -32,6 +44,42 @@ def toggle_task_completion(request):
         return JsonResponse({'success': True, 'is_completed': task.is_completed})
     except Task.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Task not found or unauthorized'}, status=404)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def reorder_tasks(request):
+    try:
+        data = json.loads(request.body)
+        ordered_task_ids = data.get('ordered_task_ids', [])
+        # Update the order field of tasks based on the new order
+        for order, task_id in enumerate(ordered_task_ids):
+            task = Task.objects.filter(id=task_id, user=request.user).first()
+            if task:
+                task.order = order
+                task.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@login_required
+def task_detail(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    comments = task.comments.all().order_by('-created_at')
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.task = task
+            comment.user = request.user
+            comment.save()
+            return redirect('task_detail', task_id=task_id)
+    else:
+        form = CommentForm()
+
+    return render(request, "task_detail.html", {"task": task, "comments": comments, "form": form})
 
 
 def login_view(request):
@@ -109,12 +157,21 @@ def task_list(request):
         return redirect("login")
 
     category_id = request.GET.get("category")
+    sort_by = request.GET.get("sort_by")
 
     # Filter tasks based on the logged-in user and selected category
     if category_id:
         tasks = Task.objects.filter(user=request.user, category_id=category_id)
     else:
         tasks = Task.objects.filter(user=request.user)
+
+    # Apply sorting
+    if sort_by == "priority":
+        tasks = tasks.order_by('priority')
+    elif sort_by == "due_date":
+        tasks = tasks.order_by('due_date')
+    else:
+        tasks = tasks.order_by('created_at')
 
     categories = Category.objects.filter(user=request.user)
 
@@ -125,8 +182,11 @@ def task_list(request):
     return render(request, 'task_list.html', {
         'tasks': tasks,
         'categories': categories,
+        'sort_by': sort_by,
     })
 
+
+from .forms import TaskForm
 
 @login_required(login_url="login")
 def task_create(request):
@@ -145,43 +205,20 @@ def task_create(request):
     categories = Category.objects.filter(user=request.user)
 
     if request.method == "POST":
-        title = request.POST.get("title")
-        description = request.POST.get("description")
-        created_at = request.POST.get("created_at")
-        due_date = request.POST.get("due_date")
-        is_completed = request.POST.get("is_completed") == "on"
-        category_id = request.POST.get("category")
-        new_category_name = request.POST.get("new_category").strip()
-        priority = request.POST.get("priority")
-        reminder = request.POST.get("reminder")
-
-        if new_category_name:
-            category, created = Category.objects.get_or_create(name=new_category_name, user=request.user)
-        else:
-            category = Category.objects.filter(user=request.user).get(id=category_id) if category_id else None
-
-        task = Task(
-            title=title,
-            description=description,
-            created_at=created_at,
-            due_date=due_date,
-            is_completed=is_completed,
-            category=category,
-            user=request.user,
-            priority=priority,
-            reminder=reminder if reminder else None,
-        )
-        task.save()
-        # Send reminder email immediately if reminder is set
-        if task.reminder:
-            send_task_reminder_email(task)
-        messages.success(request, "Task created successfully")
-        if category:
-            return redirect(f"{request.path}?category={category.id}")
-        else:
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.user = request.user
+            task.save()
+            # Send reminder email immediately if reminder is set
+            if task.reminder:
+                send_task_reminder_email(task)
+            messages.success(request, "Task created successfully")
             return redirect("task_list")
+    else:
+        form = TaskForm()
 
-    return render(request, "task_form.html", {"categories": categories, "task": None})
+    return render(request, "task_form.html", {"categories": categories, "form": form, "task": None})
 
 
 @login_required(login_url="login")
@@ -196,30 +233,41 @@ def delete_task(request, task_id):
     return render(request, "delete_task.html", {"task": task})
 
 
+from .forms import TaskForm
+
 @login_required(login_url="login")
 def task_update(request, task_id):
     task = get_object_or_404(Task, id=task_id)
 
     if request.method == "POST":
-        task.title = request.POST.get("title")
-        task.description = request.POST.get("description")
-        task.due_date = request.POST.get("due_date")
-        task.is_completed = request.POST.get("is_completed") == "on"
-        task.priority = request.POST.get("priority")
-        reminder = request.POST.get("reminder")
-        task.reminder = reminder if reminder else None
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Task updated successfully")
+            return redirect("task_list")
+    else:
+        form = TaskForm(instance=task)
 
-        task.save()
-        messages.success(request, "Task updated successfully")
-        return redirect("task_list")
-
-    return render(request, "task_form.html", {"task": task})
+    return render(request, "task_form.html", {"form": form, "task": task})
 
 
 @login_required(login_url="login")
 def task_detail(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    return render(request, "task_detail.html", {"task": task})
+    comments = task.comments.all().order_by('-created_at')
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.task = task
+            comment.user = request.user
+            comment.save()
+            return redirect('task_detail', task_id=task_id)
+    else:
+        form = CommentForm()
+
+    return render(request, "task_detail.html", {"task": task, "comments": comments, "form": form})
 
 
 @login_required

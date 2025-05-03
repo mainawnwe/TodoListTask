@@ -27,3 +27,4 @@ urllib3==2.3.0
 userpath==1.9.2
 virtualenv==20.28.0
 wheel==0.45.0
+django-allauth

@@ -1,0 +1,41 @@
+/* Responsive styles for Task List */
+
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ddd;
+  }
+
+  tbody tr td {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 50%;
+    position: relative;
+  }
+
+  tbody tr td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 45%;
+    padding-left: 1rem;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+}
