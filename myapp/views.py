@@ -89,6 +89,7 @@ def logout_view(request):
     logout(request)
     return redirect("home")
 
+<<<<<<< HEAD
 # def task_list(request):
 #     tasks = None
 #     categories = Category.objects.all()  # get all categories
@@ -153,12 +154,27 @@ def task_create(request):
 
     categories = Category.objects.filter(user=request.user)
     
+=======
+
+def task_list(request):
+    if request.user.is_authenticated:
+        tasks = Task.objects.filter(user=request.user)  # Only show tasks for the logged-in user
+    else:
+        tasks = None  # Set tasks to None if the user is not logged in
+
+    return render(request, 'task_list.html', {'tasks': tasks})
+
+
+@login_required(login_url="login")  # Ensure the user is logged in
+def task_create(request):
+>>>>>>> 2e5f3ce78f39aed0b4848893b4ae6d9b0a25f350
     if request.method == "POST":
         title = request.POST.get("title")
         description = request.POST.get("description")
         created_at = request.POST.get("created_at")
         due_date = request.POST.get("due_date")
         is_completed = request.POST.get("is_completed") == "on"
+<<<<<<< HEAD
         category_id = request.POST.get("category")
         new_category_name = request.POST.get("new_category").strip()
         priority = request.POST.get("priority")
@@ -168,6 +184,8 @@ def task_create(request):
             category, created = Category.objects.get_or_create(name=new_category_name, user=request.user)
         else:
             category = Category.objects.filter(user=request.user).get(id=category_id) if category_id else None
+=======
+>>>>>>> 2e5f3ce78f39aed0b4848893b4ae6d9b0a25f350
 
         task = Task(
             title=title,
@@ -175,6 +193,7 @@ def task_create(request):
             created_at=created_at,
             due_date=due_date,
             is_completed=is_completed,
+<<<<<<< HEAD
             category=category,
             user=request.user,
             priority=priority,
@@ -192,6 +211,14 @@ def task_create(request):
     
     return render(request, "task_form.html", {"categories": categories, "task": None})
 
+=======
+            user=request.user  # Associate the task with the logged-in user
+        )
+        task.save()
+        messages.success(request, "Task created successfully")
+        return redirect("task_list")  # Redirect to task_list after creating the task
+    return render(request, "task_form.html")  # Render the task form on GET request
+>>>>>>> 2e5f3ce78f39aed0b4848893b4ae6d9b0a25f350
 
 @login_required(login_url="login")
 def delete_task(request, task_id):
@@ -214,9 +241,12 @@ def task_update(request, task_id):
         task.description = request.POST.get("description")
         task.due_date = request.POST.get("due_date")
         task.is_completed = request.POST.get("is_completed") == "on"
+<<<<<<< HEAD
         task.priority = request.POST.get("priority")
         reminder = request.POST.get("reminder")
         task.reminder = reminder if reminder else None
+=======
+>>>>>>> 2e5f3ce78f39aed0b4848893b4ae6d9b0a25f350
 
         task.save()
         messages.success(request, "Task updated successfully")
@@ -373,6 +403,7 @@ def reset_password(request, uidb64, token):
     except (User.DoesNotExist, ValueError, TypeError):
         messages.error(request, "Invalid reset link.")
         return redirect('password_reset')
+<<<<<<< HEAD
 
 
 
@@ -390,3 +421,5 @@ from .models import Task, Category
 #         'tasks': tasks,
 #         'categories': categories,
 #     })
+=======
+>>>>>>> 2e5f3ce78f39aed0b4848893b4ae6d9b0a25f350
