@@ -48,93 +48,114 @@
 </div>
 
       <!-- Task Table -->
-      <table id="task-list" class="min-w-full table-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-        <thead>
-          <tr class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white">
-            <th class="py-3 px-6 text-left border-b" data-label="Title">Title</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Description">Description</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Created At">Created At</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Due Date">Due Date</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Priority">Priority</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Completed">Completed</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Created By">Created By</th>
-            <th class="py-3 px-6 text-left border-b" data-label="Action">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% if tasks %}
-          {% for task in tasks %}
-            <tr class="task-item border-b hover:bg-gray-50 dark:hover:bg-gray-700" draggable="true">
-<td class="py-3 px-6 text-lg font-semibold" data-label="Title">{{ task.title }}</td>
-              <td class="py-3 px-6" data-label="Description">{{ task.description }}</td>
-              <td class="py-3 px-6" data-label="Created At">{{ task.created_at }}</td>
-              <td class="py-3 px-6" data-label="Due Date">{{ task.due_date|date:'Y-m-d H:i:s' }}</td>
-              <td class="py-3 px-6" data-label="Priority">{{ task.priority }}</td>
-              <td class="py-3 px-6" data-label="Completed">
-                {% if task.user == request.user %}
-                  <input type="checkbox" class="task-completed-checkbox" data-task-id="{{ task.id }}" {% if task.is_completed %}checked{% endif %}>
-                {% else %}
-                  {{ task.is_completed|yesno:'Yes,No' }}
-                {% endif %}
-              </td>
-              <td class="py-3 px-6" data-label="Created By">{{ task.user.username }}</td>
-<td class="py-3 px-6" data-label="Action">
-<div class="flex items-center space-x-4 text-2xl">
-  <a href="{% url 'task_detail' task.id %}" class="text-blue-500 hover:underline">📋</a>
-  <a href="{% url 'task_update' task.id %}" class="text-yellow-500 hover:underline"><i class="fa-solid fa-pen-to-square"></i></a>
-
-  {% if task.user == request.user %}
-    <form action="{% url 'delete_task' task.id %}" method="post" class="inline-block">
-      {% csrf_token %}
-      <button type="submit" class="text-red-500 hover:underline bg-transparent border-none"><i class="fa-solid fa-trash"></i></button>
-    </form>
-  {% endif %}
-</div>
-</td>
-          </tr>
-            {% if task.subtasks.all %}
-              {% for subtask in task.subtasks.all %}
-                <tr class="task-item border-b hover:bg-gray-50 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-600" draggable="true">
-                  <td class="py-3 px-6 pl-12 text-lg font-semibold" data-label="Title">↳ {{ subtask.title }}</td>
-                  <td class="py-3 px-6" data-label="Description">{{ subtask.description }}</td>
-                  <td class="py-3 px-6" data-label="Created At">{{ subtask.created_at }}</td>
-                  <td class="py-3 px-6" data-label="Due Date">{{ subtask.due_date|date:'Y-m-d H:i:s' }}</td>
-                  <td class="py-3 px-6" data-label="Priority">{{ subtask.priority }}</td>
-                  <td class="py-3 px-6" data-label="Completed">
-                    {% if subtask.user == request.user %}
-                      <input type="checkbox" class="task-completed-checkbox" data-task-id="{{ subtask.id }}" {% if subtask.is_completed %}checked{% endif %}>
+      <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700">
+        <table id="task-list" class="min-w-full table-auto rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white">
+              <th class="py-3 px-6 text-left border-b" data-label="Title">Title</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Description">Description</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Created At">Created At</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Due Date">Due Date</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Priority">Priority</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Completed">Completed</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Created By">Created By</th>
+              <th class="py-3 px-6 text-left border-b" data-label="Action">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if tasks %}
+            {% for task in tasks %}
+              <tr class="task-item border-b hover:bg-gray-50 dark:hover:bg-gray-700" draggable="true">
+                <td class="py-3 px-6 text-lg font-semibold" data-label="Title">{{ task.title }}</td>
+                <td class="py-3 px-6" data-label="Description">{{ task.description }}</td>
+                <td class="py-3 px-6" data-label="Created At">{{ task.created_at|date:"F j, Y, g:i a" }}</td>
+                <td class="py-3 px-6" data-label="Due Date">{{ task.due_date|date:"F j, Y, g:i a" }}</td>
+                <td class="py-3 px-6" data-label="Priority">
+                  {% if task.priority == "High" %}
+                    <span class="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">High</span>
+                  {% elif task.priority == "Medium" %}
+                    <span class="inline-block bg-yellow-400 text-white px-3 py-1 rounded-full text-sm font-semibold">Medium</span>
+                  {% else %}
+                    <span class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">Low</span>
+                  {% endif %}
+                </td>
+                <td class="py-3 px-6" data-label="Completed">
+                  {% if task.user == request.user %}
+                    <input type="checkbox" class="task-completed-checkbox" data-task-id="{{ task.id }}" {% if task.is_completed %}checked{% endif %}>
+                  {% else %}
+                    {% if task.is_completed %}
+                      <span class="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Yes</span>
                     {% else %}
-                      {{ subtask.is_completed|yesno:'Yes,No' }}
+                      <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded-full text-sm font-semibold">No</span>
                     {% endif %}
-                  </td>
-                  <td class="py-3 px-6" data-label="Created By">{{ subtask.user.username }}</td>
-                  <td class="py-3 px-6" data-label="Action">
-                    <div class="flex items-center space-x-4 text-xl">
-                      <a href="{% url 'task_detail' subtask.id %}" class="text-blue-500 hover:underline">📋</a>
-                      <a href="{% url 'task_update' subtask.id %}" class="text-yellow-500 hover:underline"><i class="fa-solid fa-pen-to-square"></i></a>
-                      {% if subtask.user == request.user %}
-                        <form action="{% url 'delete_task' subtask.id %}" method="post" class="inline-block">
-                          {% csrf_token %}
-                          <button type="submit" class="text-red-500 hover:underline bg-transparent border-none"><i class="fa-solid fa-trash"></i></button>
-                        </form>
+                  {% endif %}
+                </td>
+                <td class="py-3 px-6" data-label="Created By">{{ task.user.username }}</td>
+                <td class="py-3 px-6" data-label="Action">
+                  <div class="flex items-center space-x-4 text-2xl">
+                    <a href="{% url 'task_detail' task.id %}" class="text-blue-500 hover:underline">📋</a>
+                    <a href="{% url 'task_update' task.id %}" class="text-yellow-500 hover:underline"><i class="fa-solid fa-pen-to-square"></i></a>
+                    {% if task.user == request.user %}
+                      <form action="{% url 'delete_task' task.id %}" method="post" class="inline-block">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-500 hover:underline bg-transparent border-none"><i class="fa-solid fa-trash"></i></button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% if task.subtasks.all %}
+                {% for subtask in task.subtasks.all %}
+                  <tr class="task-item border-b hover:bg-gray-50 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-600" draggable="true">
+                    <td class="py-3 px-6 pl-12 text-lg font-semibold" data-label="Title">↳ {{ subtask.title }}</td>
+                    <td class="py-3 px-6" data-label="Description">{{ subtask.description }}</td>
+                    <td class="py-3 px-6" data-label="Created At">{{ subtask.created_at|date:"F j, Y, g:i a" }}</td>
+                    <td class="py-3 px-6" data-label="Due Date">{{ subtask.due_date|date:"F j, Y, g:i a" }}</td>
+                    <td class="py-3 px-6" data-label="Priority">
+                      {% if subtask.priority == "High" %}
+                        <span class="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">High</span>
+                      {% elif subtask.priority == "Medium" %}
+                        <span class="inline-block bg-yellow-400 text-white px-3 py-1 rounded-full text-sm font-semibold">Medium</span>
+                      {% else %}
+                        <span class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">Low</span>
                       {% endif %}
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-            {% endif %}
-        {% empty %}
-          <tr>
-            <td colspan="7" class="text-center py-4">No tasks available.</td>
-          </tr>
-        {% endfor %}
-      {% else %}
-        <tr>
-          <td colspan="7" class="text-center py-4">Please create your task list to make daily life easy.</td>
-        </tr>
-      {% endif %}
-    </tbody>
-  </table>
+                    </td>
+                    <td class="py-3 px-6" data-label="Completed">
+                      {% if subtask.user == request.user %}
+                        <input type="checkbox" class="task-completed-checkbox" data-task-id="{{ subtask.id }}" {% if subtask.is_completed %}checked{% endif %}>
+                      {% else %}
+                        {% if subtask.is_completed %}
+                          <span class="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Yes</span>
+                        {% else %}
+                          <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded-full text-sm font-semibold">No</span>
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                    <td class="py-3 px-6" data-label="Created By">{{ subtask.user.username }}</td>
+                    <td class="py-3 px-6" data-label="Action">
+                      <div class="flex items-center space-x-4 text-xl">
+                        <a href="{% url 'task_detail' subtask.id %}" class="text-blue-500 hover:underline">📋</a>
+                        <a href="{% url 'task_update' subtask.id %}" class="text-yellow-500 hover:underline"><i class="fa-solid fa-pen-to-square"></i></a>
+                        {% if subtask.user == request.user %}
+                          <form action="{% url 'delete_task' subtask.id %}" method="post" class="inline-block">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-500 hover:underline bg-transparent border-none"><i class="fa-solid fa-trash"></i></button>
+                          </form>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" class="text-center py-4">No tasks available.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      </div>
     {% else %}
       <div class="text-center">
         <h2 class="text-3xl font-semibold mb-4 text-gray-800">Create Your Task List</h2>

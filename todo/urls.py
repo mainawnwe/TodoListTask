@@ -30,6 +30,9 @@ urlpatterns = [
         name="password_reset_complete"),
 
     path('accounts/', include('allauth.urls')),  # django-allauth URLs
+
+    # Notification check endpoint
+    path('notifications/check_new/', views.check_new_notifications, name='check_new_notifications'),
 ]
 
 if settings.DEBUG:

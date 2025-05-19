@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "myapp",
     "django_celery_beat",
     'widget_tweaks',
+    "channels",
 
     # django-allauth apps
     "django.contrib.sites",
@@ -56,6 +57,16 @@ INSTALLED_APPS = [
     # Add social providers as needed, e.g.:
     "allauth.socialaccount.providers.google",
 ]
+
+# Celery Configuration Options
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'UTC'
+
+# Add django-celery-beat scheduler
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
 SITE_ID = 1
 
@@ -79,6 +90,17 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+ASGI_APPLICATION = 'todo.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",

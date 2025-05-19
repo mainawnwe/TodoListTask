@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <div class="container mx-auto px-4 py-8">
+    {% if user.is_authenticated %}
+      <h1 class="text-4xl font-bold mb-8 text-gray-900 dark:text-white">
+        {% if task %}Edit Task{% else %}Create Task{% endif %}
+      </h1>
+      <form method="post" action="{% if task %}{% url 'task_update' task.id %}{% else %}{% url 'task_create' %}{% endif %}" class="bg-white dark:bg-gray-900 shadow-lg rounded-lg p-8 max-w-3xl mx-auto space-y-6">
+        {% csrf_token %}
+        
+        <!-- Title Field -->
+        <div>
+          <label for="title" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Title</label>
+          <input type="text" id="title" name="title" required 
+                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                 value="{{ form.title.value|default:task.title|default:'' }}">
+          {% if form.title.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.title.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Description Field -->
+        <div>
+          <label for="description" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Description</label>
+          <textarea id="description" name="description" rows="4"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">{{ form.description.value|default:task.description|default:'' }}</textarea>
+          {% if form.description.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.description.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Due Date Field -->
+        <div>
+          <label for="due_date" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Due Date</label>
+          <input type="date" id="due_date" name="due_date"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                 value="{{ form.due_date.value|default:task.due_date|date:'Y-m-d'|default:'' }}">
+          {% if form.due_date.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.due_date.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Priority Field -->
+        <div>
+          <label for="priority" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Priority</label>
+          <select id="priority" name="priority" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+            <option value="High" {% if form.priority.value == "High" or task.priority == "High" %}selected{% endif %}>High</option>
+            <option value="Medium" {% if form.priority.value == "Medium" or task.priority == "Medium" %}selected{% endif %}>Medium</option>
+            <option value="Low" {% if form.priority.value == "Low" or task.priority == "Low" %}selected{% endif %}>Low</option>
+          </select>
+          {% if form.priority.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.priority.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Category Field -->
+        <div>
+          <label for="category" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Category</label>
+          <select id="category" name="category" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+            {% for category in categories %}
+              <option value="{{ category.id }}" 
+                {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" or task and task.category and task.category.id == category.id %}selected{% endif %}>
+                {{ category.name }}
+              </option>
+            {% endfor %}
+          </select>
+          {% if form.category.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.category.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Reminder Field -->
+        <div>
+          <label for="reminder" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Reminder</label>
+          <input type="datetime-local" id="reminder" name="reminder"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                 value="{{ form.reminder.value|default:task.reminder|date:'Y-m-d\\TH:i'|default:'' }}">
+          {% if form.reminder.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.reminder.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Recurrence Field -->
+        <div>
+          <label for="recurrence" class="block mb-2 font-semibold text-gray-700 dark:text-gray-300">Recurrence</label>
+          <select id="recurrence" name="recurrence" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+            <option value="none" {% if form.recurrence.value == "none" or task.recurrence == "none" %}selected{% endif %}>None</option>
+            <option value="daily" {% if form.recurrence.value == "daily" or task.recurrence == "daily" %}selected{% endif %}>Daily</option>
+            <option value="weekly" {% if form.recurrence.value == "weekly" or task.recurrence == "weekly" %}selected{% endif %}>Weekly</option>
+            <option value="monthly" {% if form.recurrence.value == "monthly" or task.recurrence == "monthly" %}selected{% endif %}>Monthly</option>
+          </select>
+          {% if form.recurrence.errors %}
+            <div class="text-red-500 text-sm mt-1">{{ form.recurrence.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-lg shadow-lg transition duration-300">
+          {% if task %}Update Task{% else %}Create Task{% endif %}
+        </button>
+      </form>
+    {% else %}
+      <div class="text-center">
+        <h2 class="text-3xl font-semibold mb-4 text-gray-800">Please log in to create tasks</h2>
+        <a href="{% url 'login' %}" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all">Log In</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

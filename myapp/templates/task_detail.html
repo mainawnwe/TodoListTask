@@ -6,46 +6,69 @@
   <br />
   <div class="container mx-auto px-4">
     {% if user.is_authenticated %}
-      <h1 class="text-4xl font-semibold text-gray-800 dark:text-white mb-6">Task Detail</h1>
+      <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-8 flex items-center justify-between">
+        Task Detail
+<a href="{% url 'task_list' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-base px-4 py-1 rounded-lg transition duration-300">
+          &larr; Back to Task List
+        </a>
+      </h1>
 
-      <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-        <h2 class="text-2xl font-semibold mb-4">{{ task.title }}</h2>
-        <p class="mb-4">{{ task.description }}</p>
-        <p><strong>Created At:</strong> {{ task.created_at }}</p>
-        <p><strong>Due Date:</strong> {{ task.due_date|date:'Y-m-d H:i:s' }}</p>
-        <p><strong>Priority:</strong> {{ task.priority }}</p>
-        <p><strong>Completed:</strong> {{ task.is_completed|yesno:"Yes,No" }}</p>
-        <p><strong>Created By:</strong> {{ task.user.username }}</p>
+      <div class="bg-white dark:bg-gray-900 shadow-xl rounded-xl p-8 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-3xl font-bold mb-4 text-indigo-600 dark:text-indigo-400">{{ task.title }}</h2>
+        <p class="mb-6 text-gray-700 dark:text-gray-300 leading-relaxed">{{ task.description }}</p>
+        <div class="grid grid-cols-2 gap-4 mb-6 text-gray-600 dark:text-gray-400">
+          <div><span class="font-semibold">Created At:</span> {{ task.created_at|date:"F j, Y, g:i a" }}</div>
+          <div><span class="font-semibold">Due Date:</span> {{ task.due_date|date:"F j, Y, g:i a" }}</div>
+          <div>
+            <span class="font-semibold">Priority:</span>
+            {% if task.priority == "High" %}
+              <span class="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">High</span>
+            {% elif task.priority == "Medium" %}
+              <span class="inline-block bg-yellow-400 text-white px-3 py-1 rounded-full text-sm font-semibold">Medium</span>
+            {% else %}
+              <span class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">Low</span>
+            {% endif %}
+          </div>
+          <div>
+            <span class="font-semibold">Completed:</span>
+            {% if task.is_completed %}
+              <span class="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Yes</span>
+            {% else %}
+              <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded-full text-sm font-semibold">No</span>
+            {% endif %}
+          </div>
+          <div><span class="font-semibold">Created By:</span> {{ task.user.username }}</div>
+        </div>
       </div>
 
-      <div class="mt-8">
-        <h3 class="text-xl font-semibold mb-4">Comments</h3>
+      <div class="mt-10">
+        <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Comments</h3>
         {% if comments %}
-          <ul class="space-y-4">
+          <ul class="space-y-6">
             {% for comment in comments %}
-              <li class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                <p>{{ comment.content }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">By {{ comment.user.username }} on {{ comment.created_at }}</p>
+              <li class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <p class="mb-2 text-gray-800 dark:text-gray-200">{{ comment.content }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">By <span class="font-semibold">{{ comment.user.username }}</span> on {{ comment.created_at|date:"F j, Y, g:i a" }}</p>
               </li>
             {% endfor %}
           </ul>
         {% else %}
-          <p>No comments yet.</p>
+          <p class="text-gray-600 dark:text-gray-400">No comments yet.</p>
         {% endif %}
       </div>
 
-      <div class="mt-6">
-        <h3 class="text-xl font-semibold mb-4">Add Comment</h3>
-        <form method="post" action="">
+      <div class="mt-8">
+        <h3 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Add Comment</h3>
+        <form method="post" action="" class="space-y-4">
           {% csrf_token %}
           {{ form.as_p }}
-          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add Comment</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Add Comment</button>
         </form>
       </div>
     {% else %}
       <div class="text-center">
-        <h2 class="text-3xl font-semibold mb-4 text-gray-800">Please log in to view task details</h2>
-        <a href="{% url 'login' %}" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all">Log In</a>
+        <h2 class="text-3xl font-extrabold mb-4 text-gray-900 dark:text-white">Please log in to view task details</h2>
+        <a href="{% url 'login' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg transition duration-300">Log In</a>
       </div>
     {% endif %}
   </div>

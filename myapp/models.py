@@ -18,7 +18,15 @@ class Task(models.Model):
         ('Low', 'Low'),
     ]
 
+    RECURRENCE_CHOICES = [
+        ('none', 'None'),
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    shared_users = models.ManyToManyField(User, related_name='shared_tasks', blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -32,6 +40,7 @@ class Task(models.Model):
     )
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='Medium')
     reminder = models.DateTimeField(null=True, blank=True)
+    recurrence = models.CharField(max_length=10, choices=RECURRENCE_CHOICES, default='none')
     parent_task = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subtasks')
 
     def __str__(self):

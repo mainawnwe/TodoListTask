@@ -152,6 +152,8 @@ def logout_view(request):
     return redirect("home")
 
 
+from django.db import models
+
 def task_list(request):
     if not request.user.is_authenticated:
         return redirect("login")
@@ -159,11 +161,16 @@ def task_list(request):
     category_id = request.GET.get("category")
     sort_by = request.GET.get("sort_by")
 
-    # Filter tasks based on the logged-in user and selected category
+    # Filter tasks based on the logged-in user, shared tasks, and selected category
     if category_id:
-        tasks = Task.objects.filter(user=request.user, category_id=category_id)
+        tasks = Task.objects.filter(
+            (models.Q(user=request.user) | models.Q(shared_users=request.user)),
+            category_id=category_id
+        ).distinct()
     else:
-        tasks = Task.objects.filter(user=request.user)
+        tasks = Task.objects.filter(
+            models.Q(user=request.user) | models.Q(shared_users=request.user)
+        ).distinct()
 
     # Apply sorting
     if sort_by == "priority":
@@ -205,20 +212,72 @@ def task_create(request):
     categories = Category.objects.filter(user=request.user)
 
     if request.method == "POST":
-        form = TaskForm(request.POST)
-        if form.is_valid():
-            task = form.save(commit=False)
-            task.user = request.user
-            task.save()
-            # Send reminder email immediately if reminder is set
-            if task.reminder:
-                send_task_reminder_email(task)
-            messages.success(request, "Task created successfully")
-            return redirect("task_list")
-    else:
-        form = TaskForm()
+        title = request.POST.get("title")
+        description = request.POST.get("description")
+        due_date = request.POST.get("due_date")
+        priority = request.POST.get("priority")
+        category_id = request.POST.get("category")
+        reminder_str = request.POST.get("reminder")
+        reminder = None
+        if reminder_str:
+            from django.utils.dateparse import parse_datetime
+            reminder = parse_datetime(reminder_str)
+        recurrence = request.POST.get("recurrence")
 
-    return render(request, "task_form.html", {"categories": categories, "form": form, "task": None})
+        category = Category.objects.filter(id=category_id, user=request.user).first()
+
+        task = Task.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            due_date=due_date if due_date else None,
+            priority=priority,
+            category=category,
+            reminder=reminder,
+            recurrence=recurrence,
+        )
+
+        # Send reminder email immediately if reminder is set
+        if task.reminder:
+            send_task_reminder_email(task)
+
+        # Handle recurring tasks creation
+        if task.recurrence != 'none':
+            from datetime import timedelta
+            from django.utils import timezone
+
+            def create_recurring_tasks(task):
+                next_due_date = task.due_date
+                if isinstance(next_due_date, str):
+                    from django.utils.dateparse import parse_datetime
+                    next_due_date = parse_datetime(next_due_date)
+                for _ in range(5):  # Create next 5 occurrences
+                    if task.recurrence == 'daily':
+                        next_due_date += timedelta(days=1)
+                    elif task.recurrence == 'weekly':
+                        next_due_date += timedelta(weeks=1)
+                    elif task.recurrence == 'monthly':
+                        # Approximate monthly by adding 30 days
+                        next_due_date += timedelta(days=30)
+                    new_task = Task.objects.create(
+                        user=task.user,
+                        title=task.title,
+                        description=task.description,
+                        due_date=next_due_date,
+                        category=task.category,
+                        priority=task.priority,
+                        reminder=task.reminder,
+                        recurrence='none',
+                        parent_task=task,
+                    )
+                    new_task.save()
+
+            create_recurring_tasks(task)
+
+        messages.success(request, "Task created successfully")
+        return redirect("task_list")
+
+    return render(request, "task_create.html", {"categories": categories})
 
 
 @login_required(login_url="login")
@@ -242,13 +301,18 @@ def task_update(request, task_id):
     if request.method == "POST":
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            form.save()
+            task = form.save(commit=False)
+            task.save()
+            form.save_m2m()  # Save many-to-many data for shared_users
+
+            # Handle recurring tasks update if needed (optional: you can implement logic here)
+
             messages.success(request, "Task updated successfully")
             return redirect("task_list")
     else:
         form = TaskForm(instance=task)
 
-    return render(request, "task_form.html", {"form": form, "task": task})
+    return render(request, "task_create.html", {"form": form, "task": task})
 
 
 @login_required(login_url="login")
@@ -302,3 +366,15 @@ def update_profile(request):
         profile_form = ProfileForm(instance=request.user.profile)
 
     return render(request, 'profile.html', {'profile_form': profile_form})
+
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_GET
+
+@login_required
+@require_GET
+def check_new_notifications(request):
+    # For demonstration, return static notifications
+    notifications = [
+        {"message": "You have a task due soon!"},
+    ]
+    return JsonResponse({"new_notifications": notifications})
